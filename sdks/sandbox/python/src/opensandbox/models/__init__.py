@@ -32,11 +32,15 @@ from opensandbox.models.execd import (
     OutputMessage,
 )
 from opensandbox.models.filesystem import (
+    AsyncReadBytesStream,
+    ByteRange,
     ContentReplaceEntry,
     ContentReplaceResult,
     DirectoryListEntry,
     EntryInfo,
     MoveEntry,
+    ReadBytesResponse,
+    ReadBytesStream,
     SearchEntry,
     SetPermissionEntry,
     WriteEntry,
@@ -112,6 +116,10 @@ __all__ = [
     "IsolatedSessionSummary",
     "IsolatedWorkspaceSpec",
     # Filesystem models
+    "ByteRange",
+    "AsyncReadBytesStream",
+    "ReadBytesResponse",
+    "ReadBytesStream",
     "EntryInfo",
     "WriteEntry",
     "MoveEntry",
