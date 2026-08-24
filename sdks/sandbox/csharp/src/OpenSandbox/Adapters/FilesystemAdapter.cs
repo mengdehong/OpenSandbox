@@ -231,25 +231,14 @@ internal sealed class FilesystemAdapter : ISandboxFiles
         using var request = BuildDownloadRequest(path, options);
         var response = await _client.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            try
-            {
-                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var requestId = response.Headers.TryGetValues(Constants.RequestIdHeader, out var values)
-                    ? values.FirstOrDefault()
-                    : null;
-
-                throw new SandboxApiException(
-                    message: "Download stream failed",
-                    statusCode: (int)response.StatusCode,
-                    requestId: requestId,
-                    rawBody: content);
-            }
-            finally
-            {
-                response.Dispose();
-            }
+            await _client.EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
         }
 
         IAsyncReadBytesStream body = new ResponseByteStream(response, cancellationToken);
@@ -285,8 +274,8 @@ internal sealed class FilesystemAdapter : ISandboxFiles
         return new ReadBytesResponse<T>(
             Body: body,
             StatusCode: (int)response.StatusCode,
-            ContentType: response.Content.Headers.ContentType?.ToString(),
-            ContentDisposition: response.Content.Headers.ContentDisposition?.ToString(),
+            ContentType: GetContentHeader(response, "Content-Type"),
+            ContentDisposition: GetContentHeader(response, "Content-Disposition"),
             ContentLength: contentLength,
             TotalSize: isPartial ? contentRange?.Total ?? -1 : contentLength,
             ContentRange: contentRange);
